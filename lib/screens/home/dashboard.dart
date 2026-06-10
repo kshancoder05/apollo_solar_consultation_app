@@ -1,5 +1,6 @@
 import 'package:apollo_solar_consultation_app/screens/home/consultation/consultation_flow.dart';
-import 'package:apollo_solar_consultation_app/screens/auth/login.dart';
+import 'package:apollo_solar_consultation_app/screens/auth/login_screen.dart';
+import 'package:apollo_solar_consultation_app/services/session.dart';
 import 'package:flutter/material.dart';
 
 class DashboardPage extends StatefulWidget {
@@ -74,6 +75,7 @@ class _DashboardPageState extends State<DashboardPage> {
               color: Colors.white,
             ),
             onPressed: () {
+              Session.clear();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(

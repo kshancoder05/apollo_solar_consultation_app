@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'screens/auth/login.dart' as login;
+import 'screens/auth/login_screen.dart';
+
 void main() {
   runApp(const ApolloApp());
 }
@@ -12,7 +13,7 @@ class ApolloApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Apollo',
-      home: const login.LoginScreen(),
+      home: const LoginScreen(),
     );
   }
 }

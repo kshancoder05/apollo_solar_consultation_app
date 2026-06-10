@@ -9,6 +9,7 @@
 // tracker and the app stay in sync on one record per Ref.
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
 const String kBookingUpdateUrl =
@@ -22,6 +23,19 @@ const String kBookingListUrl =
 // if it differs.
 const String kConsultationBookedUrl =
     'https://bernard100.app.n8n.cloud/webhook/consultation-booked';
+
+const String kBookingProxyBaseUrl = 'http://localhost:3000';
+
+String _resolveUrl(String directUrl) {
+  if (!kIsWeb) return directUrl;
+  final path = Uri.parse(directUrl).path;
+  if (path.contains('apollo-auth')) return '$kBookingProxyBaseUrl/api/auth';
+  if (path.contains('apollo-booking-update')) return '$kBookingProxyBaseUrl/api/booking-update';
+  if (path.contains('apollo-booking-status')) return '$kBookingProxyBaseUrl/api/booking-status';
+  if (path.contains('apollo-booking-list')) return '$kBookingProxyBaseUrl/api/booking-list';
+  if (path.contains('consultation-booked')) return '$kBookingProxyBaseUrl/api/consultation-booked';
+  return '$kBookingProxyBaseUrl$path';
+}
 
 // Booking lifecycle — identical keys/labels to the web tracker's STAGES.
 const List<Map<String, String>> kStages = [
@@ -46,7 +60,7 @@ class BookingService {
     try {
       final res = await http
           .post(
-            Uri.parse(kBookingUpdateUrl),
+            Uri.parse(_resolveUrl(kBookingUpdateUrl)),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(payload),
           )
@@ -63,7 +77,7 @@ class BookingService {
   static Future<Map<String, dynamic>?> getByRef(String ref) async {
     try {
       final res = await http
-          .get(Uri.parse('$kBookingStatusUrl?ref=${Uri.encodeQueryComponent(ref)}'))
+          .get(Uri.parse('${_resolveUrl(kBookingStatusUrl)}?ref=${Uri.encodeQueryComponent(ref)}'))
           .timeout(const Duration(seconds: 30));
       if (res.statusCode != 200) return null;
       final d = jsonDecode(res.body);
@@ -81,7 +95,7 @@ class BookingService {
   static Future<List<Map<String, dynamic>>> listBookings() async {
     try {
       final res = await http
-          .get(Uri.parse(kBookingListUrl))
+          .get(Uri.parse(_resolveUrl(kBookingListUrl)))
           .timeout(const Duration(seconds: 30));
       if (res.statusCode != 200) return [];
       final d = jsonDecode(res.body);
@@ -105,7 +119,7 @@ class BookingService {
     try {
       final res = await http
           .post(
-            Uri.parse(kConsultationBookedUrl),
+            Uri.parse(_resolveUrl(kConsultationBookedUrl)),
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode(payload),
           )
