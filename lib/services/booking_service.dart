@@ -55,6 +55,10 @@ int stageIndex(String key) {
 String stageLabel(String key) => kStages[stageIndex(key)]['label']!;
 
 class BookingService {
+  /// Last error message from the most recent service call (empty when none).
+  static String lastError = '';
+  
+  static get _ => null;
   /// Upsert a booking. Returns true only when n8n confirms {ok:true}.
   static Future<bool> save(Map<String, dynamic> payload) async {
     try {
@@ -65,10 +69,19 @@ class BookingService {
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 30));
-      if (res.statusCode != 200) return false;
+      if (res.statusCode != 200) {
+        lastError = 'HTTP ${res.statusCode}: ${res.body}';
+        return false;
+      }
       final d = jsonDecode(res.body);
-      return d is Map && d['ok'] == true;
-    } catch (_) {
+      if (d is Map && d['ok'] == true) {
+        lastError = '';
+        return true;
+      }
+      lastError = d is Map && d['error'] != null ? '${d['error']}' : 'n8n returned unexpected response';
+      return false;
+    } catch (e) {
+      lastError = e.toString();
       return false;
     }
   }
@@ -79,13 +92,19 @@ class BookingService {
       final res = await http
           .get(Uri.parse('${_resolveUrl(kBookingStatusUrl)}?ref=${Uri.encodeQueryComponent(ref)}'))
           .timeout(const Duration(seconds: 30));
-      if (res.statusCode != 200) return null;
+      if (res.statusCode != 200) {
+        lastError = 'HTTP ${res.statusCode}: ${res.body}';
+        return null;
+      }
       final d = jsonDecode(res.body);
       if (d is Map && d['found'] == true) {
+        lastError = '';
         return Map<String, dynamic>.from(d);
       }
+      lastError = 'Booking not found';
       return null;
-    } catch (_) {
+    } catch (e) {
+      lastError = e.toString();
       return null;
     }
   }
@@ -97,17 +116,23 @@ class BookingService {
       final res = await http
           .get(Uri.parse(_resolveUrl(kBookingListUrl)))
           .timeout(const Duration(seconds: 30));
-      if (res.statusCode != 200) return [];
+      if (res.statusCode != 200) {
+        lastError = 'HTTP ${res.statusCode}: ${res.body}';
+        return [];
+      }
       final d = jsonDecode(res.body);
       final list = d is Map ? d['bookings'] : d;
       if (list is List) {
+        lastError = '';
         return list
             .whereType<Map>()
             .map((e) => Map<String, dynamic>.from(e))
             .toList();
       }
+      lastError = 'Unexpected response format from booking list';
       return [];
     } catch (_) {
+      lastError = _.toString();
       return [];
     }
   }
@@ -124,8 +149,14 @@ class BookingService {
             body: jsonEncode(payload),
           )
           .timeout(const Duration(seconds: 30));
-      return res.statusCode == 200;
+      if (res.statusCode == 200) {
+        lastError = '';
+        return true;
+      }
+      lastError = 'HTTP ${res.statusCode}: ${res.body}';
+      return false;
     } catch (_) {
+      lastError = _.toString();
       return false;
     }
   }

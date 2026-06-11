@@ -11,7 +11,13 @@ class AuthService {
   static String lastError = '';
 
   static Future<bool> login(String email, String password) {
-    return _post({'action': 'login', 'email': email.trim(), 'password': password});
+    final id = email.trim();
+    return _post({
+      'action': 'login',
+      'email': id,
+      'username': id,
+      'password': password,
+    });
   }
 
   static Future<bool> register({
@@ -19,13 +25,22 @@ class AuthService {
     required String email,
     required String password,
     required String role,
+    String contactNumber = '',
+    String address = '',
+    String birthdate = '',
   }) {
+    final id = email.trim();
     return _post({
       'action': 'register',
       'name': name.trim(),
-      'email': email.trim(),
+      'fullName': name.trim(),
+      'email': id,
+      'username': id,
       'password': password,
       'role': role,
+      'contactNumber': contactNumber.trim(),
+      'address': address.trim(),
+      'birthdate': birthdate,
     });
   }
 
@@ -75,8 +90,9 @@ class AuthService {
 
   static String _normRole(String r) {
     final t = r.toLowerCase().trim();
+    if (t.contains('admin')) return 'admin';
     if (t.contains('eng')) return 'eng';
-    if (t.contains('head') || t == 'hos') return 'hos';
+    if (t.contains('head') || t == 'hos' || t == 'hoe') return 'hos';
     if (t.contains('sale')) return 'sales';
     return t;
   }
