@@ -64,6 +64,7 @@ const server = http.createServer((req, res) => {
         ...req.headers,
         host: TARGET_HOST,
         'Content-Length': body.length,
+        'Content-Type': req.headers['content-type'] || 'application/json',
       },
     };
 

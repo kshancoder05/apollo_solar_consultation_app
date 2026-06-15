@@ -103,7 +103,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         );
       }
     } else {
-      setState(() => _error = 'Registration is temporarily unavailable.');
+      setState(() => _error = AuthService.lastError);
     }
   }
 

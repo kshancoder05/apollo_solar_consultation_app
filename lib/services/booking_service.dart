@@ -24,17 +24,20 @@ const String kBookingListUrl =
 const String kConsultationBookedUrl =
     'https://bernard100.app.n8n.cloud/webhook/consultation-booked';
 
-const String kBookingProxyBaseUrl = 'http://localhost:3000';
+const String kBookingProxyBaseUrl = 'http://127.0.0.1:3000';
+const bool kUseBookingProxy = false;
 
-String _resolveUrl(String directUrl) {
-  if (!kIsWeb) return directUrl;
-  final path = Uri.parse(directUrl).path;
-  if (path.contains('apollo-auth')) return '$kBookingProxyBaseUrl/api/auth';
-  if (path.contains('apollo-booking-update')) return '$kBookingProxyBaseUrl/api/booking-update';
-  if (path.contains('apollo-booking-status')) return '$kBookingProxyBaseUrl/api/booking-status';
-  if (path.contains('apollo-booking-list')) return '$kBookingProxyBaseUrl/api/booking-list';
-  if (path.contains('consultation-booked')) return '$kBookingProxyBaseUrl/api/consultation-booked';
-  return '$kBookingProxyBaseUrl$path';
+String _resolveUrl(String directUrl, {bool isWeb = kIsWeb}) {
+  if (kUseBookingProxy && isWeb) {
+    final path = Uri.parse(directUrl).path;
+    if (path.contains('apollo-auth')) return '$kBookingProxyBaseUrl/api/auth';
+    if (path.contains('apollo-booking-update')) return '$kBookingProxyBaseUrl/api/booking-update';
+    if (path.contains('apollo-booking-status')) return '$kBookingProxyBaseUrl/api/booking-status';
+    if (path.contains('apollo-booking-list')) return '$kBookingProxyBaseUrl/api/booking-list';
+    if (path.contains('consultation-booked')) return '$kBookingProxyBaseUrl/api/consultation-booked';
+    return '$kBookingProxyBaseUrl$path';
+  }
+  return directUrl;
 }
 
 // Booking lifecycle — identical keys/labels to the web tracker's STAGES.
@@ -58,7 +61,7 @@ class BookingService {
   /// Last error message from the most recent service call (empty when none).
   static String lastError = '';
   
-  static get _ => null;
+  static Null get _ => null;
   /// Upsert a booking. Returns true only when n8n confirms {ok:true}.
   static Future<bool> save(Map<String, dynamic> payload) async {
     try {
